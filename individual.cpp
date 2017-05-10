@@ -50,6 +50,7 @@ void Individual::InitSensor() {
   float current_height_coverage_area = 0.f;
 
   for (uint i = 0; i < TOTAL_SENSORS; i++) {
+
     list_sensor[random_id[i]].x = list_sensor[random_id[i]].r +
                                   sensor_width_coverage_area;
 
@@ -65,8 +66,16 @@ void Individual::InitSensor() {
       current_height_coverage_area = sensor_height;
     }
 
-    if (list_sensor[random_id[i]].x > WIDTH) {
+/*    if (list_sensor[random_id[i]].x > WIDTH) {
       list_sensor[random_id[i]].x = WIDTH;
+    }
+*/
+    if (list_sensor[random_id[i]].y > HEIGHT) {
+      list_sensor[random_id[i]].y = HEIGHT;
+    }
+
+    if (list_sensor[random_id[i]].y + list_sensor[random_id[i]].r > HEIGHT) {
+      list_sensor[random_id[i]].y = HEIGHT - list_sensor[random_id[i]].r;
     }
 
     if (i < TOTAL_SENSORS - 1 &&
@@ -98,11 +107,10 @@ double Individual::CaclOlapSensor(const Sensor& sr1, const Sensor& sr2) {
 
     float conner1 = 2 * acos(cosin_conner1);
     float conner2 = 2 * acos(cosin_conner2);
-    
-    double square_vp1 = M_PI * pow(sr1.r, 2) * conner1 / 360.f - 
-                        pow(sr1.r, 2) * sin(conner1) / 2.0f;
 
-    double square_vp2 = M_PI * pow(sr2.r, 2) * conner2 / 360.f - 
+    double square_vp1 = M_PI * pow(sr1.r, 2) * conner1 / (2 * M_PI) - 
+                        pow(sr1.r, 2) * sin(conner1) / 2.0f;
+    double square_vp2 = M_PI * pow(sr2.r, 2) * conner2 / (2 * M_PI) - 
                         pow(sr2.r, 2) * sin(conner2) / 2.0f;
 
     return square_vp1 + square_vp2;
@@ -121,10 +129,10 @@ double Individual::CaclOlapSensor(const Sensor& sr1, const Sensor& sr2) {
     float r_max = fmax(sr1.r, sr2.r);
     float r_min = fmin(sr1.r, sr2.r);
 
-    double square_vp1 = M_PI * pow(r_max, 2) * conner1 / 360.f - 
+    double square_vp1 = M_PI * pow(r_max, 2) * conner1 / (2 * M_PI) - 
                         pow(r_max, 2) * sin(conner1) / 2.0f;
 
-    double square_vp2 = M_PI * pow(r_min, 2) * conner2 / 360.f +
+    double square_vp2 = M_PI * pow(r_min, 2) * conner2 / (2 * M_PI) +
                         pow(r_min, 2) * sin(conner2) / 2.0f;
 
     return square_vp1 + square_vp2;
