@@ -1,5 +1,10 @@
 #include "individual.h"
 
+double CaclSensorDistance(const Sensor& sr1, const Sensor& sr2) {
+  return sqrt(pow(sr1.x - sr2.x, 2) + pow(sr1.y - sr2.y, 2));
+}
+
+
 Individual::Individual(const std::vector<std::string>& input_raw_sensor) {
   type_to_radius_converter["R1"] = 70;
   type_to_radius_converter["R2"] = 80;

@@ -33,6 +33,8 @@ struct Sensor {
 
 typedef unsigned uint;
 
+double CaclSensorDistance(const Sensor& sr1, const Sensor& sr2);
+
 class Individual {
  public:
   Individual(const std::vector<std::string>& input_raw_sensor);
@@ -44,15 +46,18 @@ class Individual {
   void CaclSensorsScore();
   double GetSensorsScore();
 
+  public:
+   double olap_area_square_;
+   Sensor list_sensor[TOTAL_SENSORS];
  private:
   double CaclOlapSensor(const Sensor& sr1, const Sensor& sr2);
 
  private:
   std::map<std::string, float> type_to_radius_converter;
 
-  Sensor list_sensor[TOTAL_SENSORS];
+
   uint random_id[TOTAL_SENSORS];
   cv::Mat image_;
-  double olap_area_square_;
+
 };
 #endif //end file
