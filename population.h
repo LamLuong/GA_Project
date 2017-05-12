@@ -134,18 +134,25 @@ void Population::NormalIndividual(const Individual& indv1,
 
     Hungarian min_hungarian(idx_to_num[num_type], (const int**)cost_matrix);
     Hungarian::Status status = min_hungarian.Solve();
-    assert(status == Hungarian::OK);
+    if (status != Hungarian::OK) {
+      for (uint i = 0; i < idx_to_num[num_type]; i++) {
+        delete [] cost_matrix[i];
+      }
+        delete [] cost_matrix;
+      std::cout << "false " << std::endl;
+      continue;
+    }
 
     for (uint i = 0; i < idx_to_num[num_type]; i++) {
       uint y_match = min_hungarian.GetXMatch(i);
       _output_result.push_back({i + offset_sensor, y_match + offset_sensor});
     }
 
-    for (unsigned k = 0; k < _output_result.size(); k++) {
+/*    for (unsigned k = 0; k < _output_result.size(); k++) {
       std::cout << _output_result[k].first << "  " << _output_result[k].second << std::endl;
     }
 
-    std::cout << std::endl << std::endl;
+    std::cout << std::endl << std::endl;*/
     for (uint i = 0; i < idx_to_num[num_type]; i++) {
       delete [] cost_matrix[i];
     }
@@ -191,8 +198,7 @@ void Population::HibridIndividual(const Individual& indv1,
 }
 
 void Population::LoopHibrid() {
-  uint i = 0;
-  std::vector<std::set<uint>> pair_hibrid;
+  std::vector<std::set<uint> > pair_hibrid;
 
   while (1) {
     uint p1 = 0, p2 = 0; 
@@ -239,23 +245,67 @@ void Population::LoopHibrid() {
   std::sort(list_individual_.begin(), list_individual_.end(),
             ComparingIndividual());
 
-/*  char filename[100] = "\0";
+  uint num_generator = 0;
+
+  while (num_generator < GENERATION) {
+    pair_hibrid.clear();
+
+    while (1) {
+      uint p1 = 0, p2 = 0; 
+      while (1) {
+        p1 = rand() % MAX_SIZE_POPULATION;
+        p2 = rand() % MAX_SIZE_POPULATION;
+        if (p1 != p2) {
+          break;
+        }
+      }
+
+      std::set<uint> tmp_id = {p1, p2};
+      if (pair_hibrid.size() == 0) {
+        pair_hibrid.push_back(tmp_id);
+      } else {
+        bool is_valid = true;
+        for (uint j = 0; j < pair_hibrid.size(); j++) {
+          if (tmp_id == pair_hibrid[j]) {
+            is_valid = false;
+            break;
+          }
+        }
+        if (is_valid) {
+          pair_hibrid.push_back(tmp_id);
+        } else {
+          continue;
+        }
+      }
+
+      Individual new_individual(array_type_sensor);
+      HibridIndividual(list_individual_[p1], list_individual_[p2],
+                       new_individual);
+      list_individual_.push_back(new_individual);
+
+      if (list_individual_.size() == 2 * MAX_SIZE_POPULATION) {
+        break;
+      }
+    }
+
+    for (uint i = 0; i < list_individual_.size(); i++) {
+      list_individual_[i].CaclSensorsScore();
+    }
+
+    std::sort(list_individual_.begin(), list_individual_.end(),
+            ComparingIndividual());
+
+    list_individual_.erase (list_individual_.begin() + MAX_SIZE_POPULATION,
+                            list_individual_.end());
+    num_generator++;
+    std::cout << num_generator << std::endl;
+  }
+
+  char filename[100] = "\0";
   for (uint i = 0; i < list_individual_.size(); i++) {
     sprintf(filename, "results/image_%d.jpg", i);
     list_individual_[i].DrawResult(filename);
   }
-*/
-/*  while (i < GENERATION){
-    pair_hibrid.clear();
-
-    uint p1 = rand() % list_individual_.size();
-    do {
-      p2 = rand() % list_individual_.size();
-    } while ();
-
-    
-  }
-*/
 }
 
 
