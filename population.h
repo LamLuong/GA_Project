@@ -12,11 +12,12 @@
 
 #include "individual.h"
 #include "hungarian.h"
-
+/*
 #define N_PARENT 25
 #define MAX_SIZE_POPULATION 50
 #define BLX_ANPHA 0.5
 #define GENERATION 1000
+*/
 const double EulerConstant = std::exp(1.0);
 
 struct ComparingIndividual {
@@ -47,15 +48,16 @@ class Population {
 };
 
 Population::Population() {
-  array_type_sensor = {"R1", "R1", "R1",
+/*  array_type_sensor = {"R1", "R1", "R1",
                       "R2", "R2", "R2",
                       "R2", "R2", "R2",
                       "R3", "R3", "R3",
                       "R3", "R3", "R3",
                       "R3", "R3", "R3"};
-
-  for (uint i = 0; i < N_PARENT; i++) {
-    Individual individual_tmp(array_type_sensor);
+*/
+  uint total_sensors = Configuration::GetInstance()->n_sensor_per_indiv;
+  for (uint i = 0; i < Configuration::GetInstance()->n_parent; i++) {
+    Individual individual_tmp;
     if (list_individual_.size() == 0) {
       individual_tmp.SetRandomIdx();
       individual_tmp.InitSensor();
@@ -65,17 +67,20 @@ Population::Population() {
       bool is_valid_idx = false;
       while (!is_valid_idx) {
         individual_tmp.SetRandomIdx();
-        uint curr_index[TOTAL_SENSORS];
+        uint* curr_index = new uint[total_sensors];
         individual_tmp.GetRandomIdx(curr_index);
-
         for (uint j = 0; j < list_individual_.size(); j++) {
-          uint curr_index_tmp[TOTAL_SENSORS];
-          list_individual_[i].GetRandomIdx(curr_index_tmp);
-          if (!CompareIdx(curr_index, curr_index_tmp, TOTAL_SENSORS)) {
+          uint* curr_index_tmp = new uint[total_sensors];
+          list_individual_[j].GetRandomIdx(curr_index_tmp);
+          if (!CompareIdx(curr_index, curr_index_tmp, total_sensors)) {
               is_valid_idx = true;
+              delete[] curr_index;
+              delete[] curr_index_tmp;
               break;
           }
-
+        }
+        if (!is_valid_idx) {
+          delete[] curr_index;
         }
       }
       individual_tmp.InitSensor();
@@ -91,6 +96,7 @@ Population::Population() {
     list_individual_[i].DrawResult(filename);
   }
   */
+
 }
 
 Population::~Population() {}
@@ -165,6 +171,7 @@ void Population::HibridIndividual(const Individual& indv1,
                                   Individual& new_indv) {
   std::vector<std::pair<int, int> > output_result;
   NormalIndividual(indv1, indv2, output_result);
+  float blx_a = Configuration::GetInstance()->blx_a;
 
   for (uint i = 0; i < output_result.size(); i++) {
     uint sensor1_pos = output_result[i].first;
@@ -174,10 +181,10 @@ void Population::HibridIndividual(const Individual& indv1,
                             - indv2.list_sensor[sensor2_pos].x);
 
     float ontop_x = fmax(indv1.list_sensor[sensor1_pos].x, indv2.list_sensor[sensor2_pos].x)
-                      + BLX_ANPHA * distance_x;
+                      + blx_a * distance_x;
 
     float botdown_x = fmin(indv1.list_sensor[sensor1_pos].x, indv2.list_sensor[sensor2_pos].x)
-                      - BLX_ANPHA * distance_x;
+                      - blx_a * distance_x;
 
     new_indv.list_sensor[sensor1_pos].x = botdown_x + static_cast <float> (rand()) / 
                     static_cast <float> (RAND_MAX / (ontop_x - botdown_x));
@@ -187,10 +194,10 @@ void Population::HibridIndividual(const Individual& indv1,
                             - indv2.list_sensor[sensor2_pos].y);
 
     float ontop_y = fmax(indv1.list_sensor[i].y, indv2.list_sensor[i].y)
-                    + BLX_ANPHA * distance_y;
+                    + blx_a * distance_y;
 
     float botdown_y = fmin(indv1.list_sensor[sensor1_pos].y, indv2.list_sensor[sensor2_pos].y)
-                    - BLX_ANPHA * distance_y;
+                    - blx_a * distance_y;
 
     new_indv.list_sensor[sensor1_pos].y = botdown_y + static_cast <float> (rand()) / 
                     static_cast <float> (RAND_MAX / (ontop_y - botdown_y));
@@ -203,8 +210,8 @@ void Population::LoopHibrid() {
   while (1) {
     uint p1 = 0, p2 = 0; 
     while (1) {
-      p1 = rand() % N_PARENT;
-      p2 = rand() % N_PARENT;
+      p1 = rand() % Configuration::GetInstance()->n_parent;
+      p2 = rand() % Configuration::GetInstance()->n_parent;
       if (p1 != p2) {
         break;
       }
@@ -228,12 +235,13 @@ void Population::LoopHibrid() {
       }
     }
 
-    Individual new_individual(array_type_sensor);
+    Individual new_individual;
     HibridIndividual(list_individual_[p1], list_individual_[p2],
                      new_individual);
+    new_individual.VFAProduce();
     list_individual_.push_back(new_individual);
 
-    if (list_individual_.size() == MAX_SIZE_POPULATION) {
+    if (list_individual_.size() == Configuration::GetInstance()->max_population_size) {
       break;
     }
   }
@@ -247,14 +255,14 @@ void Population::LoopHibrid() {
 
   uint num_generator = 0;
 
-  while (num_generator < GENERATION) {
+  while (num_generator < Configuration::GetInstance()->n_generation) {
     pair_hibrid.clear();
 
     while (1) {
       uint p1 = 0, p2 = 0; 
       while (1) {
-        p1 = rand() % MAX_SIZE_POPULATION;
-        p2 = rand() % MAX_SIZE_POPULATION;
+        p1 = rand() % Configuration::GetInstance()->max_population_size;
+        p2 = rand() % Configuration::GetInstance()->max_population_size;
         if (p1 != p2) {
           break;
         }
@@ -278,12 +286,12 @@ void Population::LoopHibrid() {
         }
       }
 
-      Individual new_individual(array_type_sensor);
+      Individual new_individual;
       HibridIndividual(list_individual_[p1], list_individual_[p2],
                        new_individual);
       list_individual_.push_back(new_individual);
 
-      if (list_individual_.size() == 2 * MAX_SIZE_POPULATION) {
+      if (list_individual_.size() == 2 * Configuration::GetInstance()->max_population_size) {
         break;
       }
     }
@@ -295,7 +303,7 @@ void Population::LoopHibrid() {
     std::sort(list_individual_.begin(), list_individual_.end(),
             ComparingIndividual());
 
-    list_individual_.erase (list_individual_.begin() + MAX_SIZE_POPULATION,
+    list_individual_.erase (list_individual_.begin() + Configuration::GetInstance()->max_population_size,
                             list_individual_.end());
     num_generator++;
     std::cout << num_generator << std::endl;
@@ -307,17 +315,6 @@ void Population::LoopHibrid() {
     list_individual_[i].DrawResult(filename);
   }
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 #endif // POPULATION_H

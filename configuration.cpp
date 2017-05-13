@@ -35,10 +35,13 @@ void Configuration::ReadConfig(const char* filename) {
     } else if (option.compare("num_sensor_type") == 0) {
       n_sensor_type = std::atoi(val.c_str());
       for (unsigned i = 0; i < n_sensor_type; i++) {
-        std::string val_i;
-        in >> val_i;
-        std::cout << std::atoi(val_i.c_str()) << std::endl;
-        n_sensor_per_type.push_back(std::atoi(val_i.c_str()));
+        std::string val_first, val_second;
+        in >> val_first >> val_second;
+        std::cout << std::atoi(val_first.c_str()) << "  " 
+                  << std::atoi(val_second.c_str()) << std::endl;
+
+        n_sensor_per_type.push_back({std::atoi(val_first.c_str()),
+                                     std::atoi(val_second.c_str())});
       }
     } else if (option.compare("num_parent") == 0) {
       n_parent = std::atoi(val.c_str());

@@ -33,7 +33,7 @@ class Configuration {
   unsigned n_generation;
   unsigned n_sensor_per_indiv;
   unsigned n_sensor_type;
-  std::vector<unsigned> n_sensor_per_type;
+  std::vector<std::pair<unsigned, unsigned> > n_sensor_per_type;
 
   unsigned n_parent;
   unsigned max_population_size;

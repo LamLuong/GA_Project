@@ -1,6 +1,5 @@
 
 #include "population.h"
-#include "configuration.h"
 
 int main(int argc, char *argv[]) {
   Configuration::GetInstance()->ReadConfig("config.ini");
