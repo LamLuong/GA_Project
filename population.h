@@ -117,20 +117,23 @@ void Population::NormalIndividual(const Individual& indv1,
                                  std::vector<std::pair<int, int> >& _output_result
                                  ) {
 
-  std::vector<uint> idx_to_num = {3, 6, 9};
+//  std::vector<uint> idx_to_num = {3, 6, 9};
   uint offset_sensor = 0;
 
-  for (uint num_type = 0; num_type < 3; num_type++) {
+  for (uint num_type = 0; num_type < Configuration::GetInstance()->n_sensor_type; num_type++) {
     if (num_type > 0) {
-      offset_sensor += idx_to_num[num_type - 1];
-    }
-    int** cost_matrix = new int* [idx_to_num[num_type]];
-    for (uint i = 0; i < idx_to_num[num_type]; i++) {
-      cost_matrix[i] = new int [idx_to_num[num_type]];
+      //offset_sensor += idx_to_num[num_type - 1];
+      offset_sensor += Configuration::GetInstance()->n_sensor_per_type[num_type - 1].first;
     }
 
-    for (uint i = 0; i < idx_to_num[num_type]; i++) {
-      for (uint j = 0; j < idx_to_num[num_type]; j++) {
+    uint num_sensor_in_type = Configuration::GetInstance()->n_sensor_per_type[num_type].first;
+    int** cost_matrix = new int* [num_sensor_in_type];
+    for (uint i = 0; i < num_sensor_in_type; i++) {
+      cost_matrix[i] = new int [num_sensor_in_type];
+    }
+
+    for (uint i = 0; i < num_sensor_in_type; i++) {
+      for (uint j = 0; j < num_sensor_in_type; j++) {
         cost_matrix[i][j] = (int)CaclSensorDistance(
                                  indv1.list_sensor[i + offset_sensor],
                                  indv2.list_sensor[j + offset_sensor]
@@ -138,10 +141,10 @@ void Population::NormalIndividual(const Individual& indv1,
       }
     }
 
-    Hungarian min_hungarian(idx_to_num[num_type], (const int**)cost_matrix);
+    Hungarian min_hungarian(num_sensor_in_type, (const int**)cost_matrix);
     Hungarian::Status status = min_hungarian.Solve();
     if (status != Hungarian::OK) {
-      for (uint i = 0; i < idx_to_num[num_type]; i++) {
+      for (uint i = 0; i < num_sensor_in_type; i++) {
         delete [] cost_matrix[i];
       }
         delete [] cost_matrix;
@@ -149,7 +152,7 @@ void Population::NormalIndividual(const Individual& indv1,
       continue;
     }
 
-    for (uint i = 0; i < idx_to_num[num_type]; i++) {
+    for (uint i = 0; i < num_sensor_in_type; i++) {
       uint y_match = min_hungarian.GetXMatch(i);
       _output_result.push_back({i + offset_sensor, y_match + offset_sensor});
     }
@@ -159,7 +162,7 @@ void Population::NormalIndividual(const Individual& indv1,
     }
 
     std::cout << std::endl << std::endl;*/
-    for (uint i = 0; i < idx_to_num[num_type]; i++) {
+    for (uint i = 0; i < num_sensor_in_type; i++) {
       delete [] cost_matrix[i];
     }
     delete [] cost_matrix;
