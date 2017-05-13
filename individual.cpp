@@ -236,14 +236,14 @@ void Individual::VFAProduce() {
     }
 
     if (n_r !=0 && n_a != 0) {
-      list_sensor[i].x += (0.5f * f_r_x / n_r + 0.5f * f_a_x / n_a);
+      list_sensor[i].x += (0.01 * f_r_x / n_r + 0.01 * f_a_x / n_a);
       if (list_sensor[i].x + list_sensor[i].r > width) {
         list_sensor[i].x = width - list_sensor[i].r;
       }
       if (list_sensor[i].x - list_sensor[i].r < 0) {
         list_sensor[i].x = list_sensor[i].r;
       }
-      list_sensor[i].y += (0.5f * f_r_y / n_r + 0.5f * f_a_y / n_a);
+      list_sensor[i].y += (0.01 * f_r_y / n_r + 0.01 * f_a_y / n_a);
       if (list_sensor[i].y + list_sensor[i].r > height) {
         list_sensor[i].y = height - list_sensor[i].r;
       }

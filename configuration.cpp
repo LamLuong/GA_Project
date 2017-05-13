@@ -49,6 +49,10 @@ void Configuration::ReadConfig(const char* filename) {
       max_population_size = std::atoi(val.c_str());
     } else if (option.compare("blx_a") == 0) {
       blx_a = std::atof(val.c_str());
+    } else if (option.compare("vfa_pull") == 0) {
+      vfa_pull = std::atof(val.c_str());
+    } else if (option.compare("vfa_push") == 0) {
+      vfa_push = std::atof(val.c_str());
     }
 
   }

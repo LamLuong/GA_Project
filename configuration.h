@@ -38,7 +38,7 @@ class Configuration {
   unsigned n_parent;
   unsigned max_population_size;
   float blx_a;
-  
+  float vfa_pull, vfa_push;
  private:
 	static Configuration* instance;
 };
