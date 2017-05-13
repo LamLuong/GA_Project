@@ -289,6 +289,7 @@ void Population::LoopHibrid() {
       Individual new_individual;
       HibridIndividual(list_individual_[p1], list_individual_[p2],
                        new_individual);
+      new_individual.VFAProduce();
       list_individual_.push_back(new_individual);
 
       if (list_individual_.size() == 2 * Configuration::GetInstance()->max_population_size) {
@@ -305,6 +306,7 @@ void Population::LoopHibrid() {
 
     list_individual_.erase (list_individual_.begin() + Configuration::GetInstance()->max_population_size,
                             list_individual_.end());
+
     num_generator++;
     std::cout << num_generator << std::endl;
   }

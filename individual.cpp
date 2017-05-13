@@ -128,50 +128,42 @@ double Individual::CaclOlapSensor(const Sensor& sr1, const Sensor& sr2) {
     return M_PI * pow(fmin(sr1.r, sr2.r), 2);
   }
 
-  if (center_distance > fmax(sr1.r, sr2.r) || center_distance < fmin(sr1.r, sr2.r)) {
+  float r_max = fmax(sr1.r, sr2.r);
+  float r_min = fmin(sr1.r, sr2.r);
 
-    float cosin_conner1 = (pow(center_distance, 2) + pow(sr1.r, 2) - pow(sr2.r, 2)) / 
-                          (2 * center_distance * sr1.r);
+  float cosin_conner_max = (pow(center_distance, 2) + pow(r_max, 2) - pow(r_min, 2)) / 
+                          (2 * center_distance * r_max);
 
-    float cosin_conner2 = (pow(center_distance, 2) + pow(sr2.r, 2) - pow(sr1.r, 2)) / 
-                          (2 * center_distance * sr2.r);
+  float cosin_conner_min = (pow(center_distance, 2) + pow(r_min, 2) - pow(r_max, 2)) / 
+                        (2 * center_distance * r_min);
 
-    float conner1 = 2 * acos(cosin_conner1);
-    float conner2 = 2 * acos(cosin_conner2);
+  float conner_max = acos(cosin_conner_max);
+  float conner_min = acos(cosin_conner_min);
 
-    double square_vp1 = M_PI * pow(sr1.r, 2) * conner1 / (2 * M_PI) - 
-                        pow(sr1.r, 2) * sin(conner1) / 2.0f;
-    double square_vp2 = M_PI * pow(sr2.r, 2) * conner2 / (2 * M_PI) - 
-                        pow(sr2.r, 2) * sin(conner2) / 2.0f;
+  
+  if (center_distance > r_max * cos(conner_max)) {
+
+    double square_vp1 = M_PI * pow(r_max, 2) * 2 * conner_max / (2 * M_PI) - 
+                        pow(r_max, 2) * sin(2 * conner_max) / 2.0f;
+    double square_vp2 = M_PI * pow(r_min, 2) * 2 * conner_min / (2 * M_PI) - 
+                        pow(r_min, 2) * sin(2 * conner_min) / 2.0f;
 
     return square_vp1 + square_vp2;
-  }
 
-  if (center_distance < fmax(sr1.r, sr2.r) && center_distance > fmin(sr1.r, sr2.r)) {
-    float cosin_conner1 = (pow(center_distance, 2) + pow(sr1.r, 2) - pow(sr2.r, 2)) / 
-                          (2 * center_distance * sr1.r);
+  } else {
 
-    float cosin_conner2 = (pow(center_distance, 2) + pow(sr2.r, 2) - pow(sr1.r, 2)) / 
-                          (2 * center_distance * sr2.r);
-    
-    float conner1 = 2 * acos(cosin_conner1);
-    float conner2 = 2 * acos(cosin_conner2);
+    double square_vp1 = M_PI * pow(r_max, 2) * 2 * conner_max / (2 * M_PI) - 
+                        pow(r_max, 2) * sin(2 * conner_max) / 2.0f;
 
-    float r_max = fmax(sr1.r, sr2.r);
-    float r_min = fmin(sr1.r, sr2.r);
-
-    double square_vp1 = M_PI * pow(r_max, 2) * conner1 / (2 * M_PI) - 
-                        pow(r_max, 2) * sin(conner1) / 2.0f;
-
-    double square_vp2 = M_PI * pow(r_min, 2) * conner2 / (2 * M_PI) +
-                        pow(r_min, 2) * sin(conner2) / 2.0f;
-
+    double square_vp2 = M_PI * pow(r_min, 2) * 2 * conner_min / (2 * M_PI) +
+                        pow(r_min, 2) * sin(2 * M_PI - 2 * conner_min) / 2.0f;
     return square_vp1 + square_vp2;
   }
 }
 
 void Individual::CaclSensorsScore() {
   uint total_sensors =  Configuration::GetInstance()->n_sensor_per_indiv;
+  olap_area_square_ = 0;
   for (uint i = 0; i < total_sensors - 1; i++) {
     for (uint j = i + 1; j < total_sensors; j++) {
       olap_area_square_ += CaclOlapSensor(list_sensor[i], list_sensor[j]);
@@ -189,7 +181,7 @@ void Individual::VFAProduce() {
     std::vector<Sensor> bound = {{list_sensor[i].x, 0, 0},
                                  {list_sensor[i].x, height, 0},
                                  {0, list_sensor[i].y, 0},
-                                 {width, list_sensor[i].x, 0}};
+                                 {width, list_sensor[i].y, 0}};
 
     float f_r_x = 0.f, f_r_y = 0.f; 
     float f_a_x = 0.f, f_a_y = 0.f;
@@ -201,7 +193,7 @@ void Individual::VFAProduce() {
       }
 
       double sr_distance = CaclSensorDistance(list_sensor[i], list_sensor[j]);
-      float total_radius = list_sensor[i].r + list_sensor[i].r;
+      float total_radius = list_sensor[i].r + list_sensor[j].r;
 
       if (sr_distance < total_radius) {
         f_r_x += (1 - total_radius / sr_distance)
@@ -243,9 +235,22 @@ void Individual::VFAProduce() {
       }
     }
 
-    list_sensor[i].x += (0.5f * f_r_x / n_r + 0.5f * f_a_x / n_a);
-    list_sensor[i].y += (0.5f * f_r_y / n_r + 0.5f * f_a_y / n_a);
-
+    if (n_r !=0 && n_a != 0) {
+      list_sensor[i].x += (0.5f * f_r_x / n_r + 0.5f * f_a_x / n_a);
+      if (list_sensor[i].x + list_sensor[i].r > width) {
+        list_sensor[i].x = width - list_sensor[i].r;
+      }
+      if (list_sensor[i].x - list_sensor[i].r < 0) {
+        list_sensor[i].x = list_sensor[i].r;
+      }
+      list_sensor[i].y += (0.5f * f_r_y / n_r + 0.5f * f_a_y / n_a);
+      if (list_sensor[i].y + list_sensor[i].r > height) {
+        list_sensor[i].y = height - list_sensor[i].r;
+      }
+      if (list_sensor[i].y - list_sensor[i].r < 0) {
+        list_sensor[i].y = list_sensor[i].r;
+      }
+    }
   }
 }
 
